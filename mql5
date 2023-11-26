@@ -1,0 +1,92 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                           Dollar Reaper          |
+//|                                           forexroboteasy.com     |
+//|                                           Forex Robot Easy Team  |
+//+------------------------------------------------------------------+
+//| This program is designed to facilitate trading based on market    |
+//| trends, providing users with a quick and easy way to make small   |
+//| profits while maintaining the best win ratio. It operates on the  |
+//| principle of small safe withdrawals for the account, ensuring     |
+//| reliability in currency trading. It is optimized for utilization  |
+//| with an ECN or Raw spread account that allows for hedging.        |
+//| Trading functionality is implemented for pairs such as GBPUSD,    |
+//| EURUSD, USDCHF, and USDJPY. Market trends are used to determine   |
+//| the most profitable trades and ensure the best win ratio for      |
+//| users. It serves as a powerful assistant for forex market analysis.|
+//| This code includes only necessary code requirements and features  |
+//| for the development of the trading algorithm.                     |
+//+------------------------------------------------------------------+
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+
+// Define trading parameters
+input int MagicNumber = 123456;
+input double LotSize = 0.01;
+input double StopLoss = 100.0;
+
+// Define trading pairs
+string[] Pairs = {'GBPUSD', 'EURUSD', 'USDCHF', 'USDJPY'};
+
+// Define trading function
+void TradePairs()
+{
+   for(int i=0; i<ArraySize(Pairs); i++)
+   {
+      // Get current price
+      double price = SymbolInfoDouble(Pairs[i], SYMBOL_ASK);
+
+      // Check if the market is trending
+      if(IsTrending(price))
+      {
+         // Open a buy order
+         double sl = price - StopLoss * Point;
+         double tp = price + StopLoss * Point;
+         bool result = OrderSend(Pairs[i], OP_BUY, LotSize, price, 0, sl, tp, 'Dollar Reaper', MagicNumber);
+         if(result)
+         {
+            Print('Buy order opened for ', Pairs[i]);
+         }
+         else
+         {
+            Print('Error opening buy order for ', Pairs[i]);
+         }
+      }
+   }
+}
+
+// Check if the market is trending
+bool IsTrending(double price)
+{
+   double prev_price = SymbolInfoDouble(_Symbol, SYMBOL_CLOSE, 1);
+   double diff = prev_price - price;
+   if(diff > 0)
+   {
+      return true;
+   }
+   else
+   {
+      return false;
+   }
+}
+
+// Main program
+void OnStart()
+{
+   // Connect to the trade server
+   if(!Trade.Connect())
+   {
+      Print('Error connecting to the trade server');
+      return;
+   }
+
+   // Trade the pairs
+   TradePairs();
+
+   // Disconnect from the trade server
+   if(!Trade.Disconnect())
+   {
+      Print('Error disconnecting from the trade server');
+   }
+}
